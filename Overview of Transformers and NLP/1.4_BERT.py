@@ -1,4 +1,3 @@
-# 例1-7
 import torch
 import torch.nn as nn
 from transformers import BertModel, BertTokenizer
