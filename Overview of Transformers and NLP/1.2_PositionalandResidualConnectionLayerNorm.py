@@ -1,4 +1,3 @@
-# 例1-2s
 import torch
 import torch.nn as nn
 import math
