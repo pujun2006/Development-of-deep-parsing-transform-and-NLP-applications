@@ -1,4 +1,3 @@
-# 例1-9
 import torch
 import torch.nn as nn
 from transformers import BertModel, BertTokenizer, get_linear_schedule_with_warmup
