@@ -1,4 +1,3 @@
-# 例1-10
 import torch
 import torch.nn as nn
 from transformers import BertModel, BertTokenizer, get_cosine_schedule_with_warmup
