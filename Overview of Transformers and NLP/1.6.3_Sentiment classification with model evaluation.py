@@ -76,20 +76,18 @@ optimizer = optim.AdamW([
 scheduler = get_cosine_schedule_with_warmup(optimizer, num_warmup_steps=10, num_training_steps=100)
 loss_fn = nn.CrossEntropyLoss(weight=torch.tensor([0.6, 0.4]))
 
-# 模拟训练过程中的一个完整epoch
-model.train()
-for batch in train_loader:
-    input_ids = batch['input_ids']
-    attention_mask = batch['attention_mask']
-    labels = batch['label']
-
-    optimizer.zero_grad()
-    outputs = model(input_ids, attention_mask)
-    loss = loss_fn(outputs, labels)
-    loss.backward()
-    optimizer.step()
-    scheduler.step()
-    print("训练损失:", loss.item())
+# 模拟训练过程中的一个完整epoch，通过3个Epoch反复迭代训练集
+epochs = 3
+for epoch in range(epochs):
+    model.train()
+    for batch in train_loader:
+        optimizer.zero_grad()
+        outputs = model(batch['input_ids'], batch['attention_mask'])
+        loss = loss_fn(outputs, batch['label'])
+        loss.backward()
+        optimizer.step()
+        scheduler.step()
+    print(f"Epoch {epoch+1}, 训练损失: {loss.item()}")
 
 # 模型评估
 model.eval()
