@@ -1,8 +1,9 @@
 import torch
 from gensim.models import Word2Vec
 from transformers import BertTokenizer, BertModel
+import jieba  # 引入 jieba 分词库用于中文分词
 
-# 定义示例文本
+# 定义示例文本（已分词，用于训练 Word2Vec）
 sentences = [
     ["自然", "语言", "处理", "是", "人工智能", "的", "重要", "组成"],
     ["机器", "学习", "是", "人工智能", "的", "核心", "领域"],
@@ -63,17 +64,21 @@ bert_embeddings = [get_bert_embedding(text) for text in texts]
 
 # 输出每个文本的嵌入结果
 for idx, embedding in enumerate(bert_embeddings):
-    print(f"文本 {idx + 1} 的 BERT 嵌入向量:", embedding)
+    print(f"文本 {idx + 1} 的 BERT 嵌入向量形状:", embedding.shape)
 
 
 # --------------------------- 词嵌入对比分析 ---------------------------
 
 # 分析 Word2Vec 嵌入与 BERT 嵌入的区别
 def compare_embeddings(word2vec_model, bert_model, tokenizer, words):
-    print("词嵌入对比分析结果：")
+    print("\n词嵌入对比分析结果：")
     for word in words:
-        # Word2Vec 嵌入
-        word2vec_embedding = word2vec_model.wv[word]
+        if word in word2vec_model.wv:
+            # Word2Vec 嵌入
+            word2vec_embedding = word2vec_model.wv[word]
+        else:
+            print(f"词汇 '{word}' 不在 Word2Vec 词表中")
+            continue
 
         # BERT 嵌入
         inputs = tokenizer(word, return_tensors="pt")
@@ -93,17 +98,23 @@ compare_embeddings(word2vec_model, bert_model, tokenizer, compare_words)
 
 # --------------------------- 综合分析 ---------------------------
 
-# 定义一个函数，计算文本的平均 Word2Vec 嵌入
+# 定义一个函数，计算文本的平均 Word2Vec 嵌入（使用 jieba 分词后求平均）
 def average_word2vec_embedding(text, model):
-    # 计算每个词的嵌入并求平均
-    embedding = sum([model.wv[word] for word in text if word in model.wv]) / len(text)
+    # 使用 jieba 对中文文本进行分词
+    words = list(jieba.cut(text))
+    # 筛选出在词表中的词，并计算其嵌入的平均值
+    valid_embeddings = [model.wv[word] for word in words if word in model.wv]
+    if len(valid_embeddings) == 0:
+        return torch.zeros(model.vector_size)  # 如果没有匹配的词，返回全0向量
+
+    embedding = sum(valid_embeddings) / len(valid_embeddings)
     return embedding
 
 
 # 获取平均 Word2Vec 嵌入
-text1 = ["自然", "语言", "处理", "是", "人工智能", "的", "重要", "组成"]
+text1 = "自然语言处理是人工智能的重要组成"
 avg_embedding = average_word2vec_embedding(text1, word2vec_model)
-print("文本的平均 Word2Vec 嵌入:", avg_embedding)
+print("\n文本的平均 Word2Vec 嵌入:", avg_embedding)
 
 
 # 定义函数计算BERT嵌入的欧氏距离
@@ -119,7 +130,7 @@ print("两个句子的 BERT 嵌入欧氏距离:", distance)
 
 # --------------------------- 综合比较结果 ---------------------------
 
-# 使用 BERT 和 Word2Vec 模型查找最相似句子
+# 使用 BERT 和 Word2Vec 模型处理文本语料
 text_corpus = [
     "自然语言处理是人工智能的重要组成",
     "机器学习是人工智能的核心",
@@ -128,11 +139,12 @@ text_corpus = [
 ]
 
 # 获取每个文本的 BERT 嵌入和平均 Word2Vec 嵌入
-bert_embeddings = [get_bert_embedding(text) for text in text_corpus]
-word2vec_embeddings = [average_word2vec_embedding(text.split(), word2vec_model) for text in text_corpus]
+bert_embeddings_corpus = [get_bert_embedding(text) for text in text_corpus]
+# 修改处：直接传入整句字符串，由 average_word2vec_embedding 内部调用 jieba 分词
+word2vec_embeddings_corpus = [average_word2vec_embedding(text, word2vec_model) for text in text_corpus]
 
 # 展示每个文本的 BERT 和 Word2Vec 嵌入
-for idx, (bert_embed, word2vec_embed) in enumerate(zip(bert_embeddings, word2vec_embeddings)):
+for idx, (bert_embed, word2vec_embed) in enumerate(zip(bert_embeddings_corpus, word2vec_embeddings_corpus)):
     print(f"\n文本 {idx + 1} 的嵌入对比:")
-    print("BERT 嵌入:", bert_embed)
+    print("BERT 嵌入 (shape):", bert_embed.shape)
     print("平均 Word2Vec 嵌入:", word2vec_embed)
