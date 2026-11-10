@@ -7,3 +7,4 @@ jieba==0.42.1
 spacy==3.8.16
 networkx==3.4.2
 torch_geometric==2.8.0.post1
+TorchCRF==1.1.0
