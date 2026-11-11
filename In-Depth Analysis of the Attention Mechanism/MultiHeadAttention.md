@@ -1,0 +1,144 @@
+MultiHeadAttention.py代码实现了一个标准且工业级的**多头注意力机制（Multi-Head Attention, MHA）**，并完整集成了**权重初始化、多头切分、缩放点积注意力、残差连接（Residual Connection）、Dropout 正则化以及 LayerNorm（层归一化）**。它是 Transformer 模型中最核心、最复杂的结构。
+
+下面分模块详细拆解这段代码：
+
+---
+
+### 一、 初始化与权重设置 (`__init__` 和 `_init_weights`)
+
+```python
+def __init__(self, d_model, num_heads, dropout_rate=0.1):
+    super(MultiHeadAttentionWithRegularization, self).__init__()
+    self.d_model = d_model        # 模型的总维度（例如 512）
+    self.num_heads = num_heads    # 注意力头的数量（例如 8）
+    self.depth = d_model // num_heads # 每个头分到的维度（512 / 8 = 64）
+
+    # 线性变换层：用于生成 Q, K, V 以及最后的输出映射
+    self.wq = nn.Linear(d_model, d_model)
+    self.wk = nn.Linear(d_model, d_model)
+    self.wv = nn.Linear(d_model, d_model)
+    self.dense = nn.Linear(d_model, d_model)
+
+    self.dropout = nn.Dropout(dropout_rate)
+    self.layer_norm = nn.LayerNorm(d_model)
+
+    self._init_weights()
+
+```
+
+* **维度拆分**：`d_model` 被均分到各个头中（`depth = d_model // num_heads`）。这意味着 8 个头并行工作时，每个头处理 64 维的子空间。
+* **`_init_weights`**：使用 **Xavier 均匀初始化（Glorot Uniform）** 初始化所有线性层的权重。这能有效防止训练初期的梯度消失或爆炸，是 Transformer 稳定训练的关键细节。
+
+---
+
+### 二、 多头切分与内存优化 (`split_heads`)
+
+```python
+def split_heads(self, x, batch_size):
+    x = x.view(batch_size, -1, self.num_heads, self.depth)
+    return x.transpose(1, 2)
+
+```
+
+* **作用**：将形状为 `(batch_size, seq_len, d_model)` 的二维/三维张量重塑并转置，变为 `(batch_size, num_heads, seq_len, depth)`。
+* **为什么这么做**：把“多头”维度提前到第 1 维，可以让 PyTorch 的矩阵乘法（`torch.matmul`）同时对多个头进行并行计算，极大提升运算效率。
+
+---
+
+### 三、 缩放点积注意力 (`scaled_dot_product_attention`)
+
+```python
+def scaled_dot_product_attention(self, q, k, v):
+    matmul_qk = torch.matmul(q, k.transpose(-2, -1))
+    dk = torch.tensor(q.size(-1), dtype=torch.float32)
+    scaled_attention_logits = matmul_qk / math.sqrt(dk)
+    attention_weights = torch.softmax(scaled_attention_logits, dim=-1)
+    output = torch.matmul(attention_weights, v)
+    return output, attention_weights
+
+```
+
+* 这是标准的注意力公式 $\text{Attention}(Q,K,V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V$。
+* 由于前面经过了 `split_heads`，这里的 `q`、`k`、`v` 都带有了 `num_heads` 维度，PyTorch 会自动在批次和头两个维度上并行执行该计算。
+
+---
+
+### 四、 前向传播与正则化 (`forward`)
+
+这是整个模块的核心控制流，包含了现代 Transformer 的标准套路：
+
+```python
+def forward(self, v, k, q, mask=None):
+    batch_size = q.size(0)
+
+    # 1. 保存原始输入用于残差连接 (Residual Connection)
+    residual = q
+
+    # 2. 线性变换：分别通过 Q、K、V 的线性层
+    q = self.wq(q)
+    k = self.wk(k)
+    v = self.wv(v)
+
+    # 3. 分头操作
+    q = self.split_heads(q, batch_size)
+    k = self.split_heads(k, batch_size)
+    v = self.split_heads(v, batch_size)
+
+    # 4. 计算多头注意力
+    scaled_attention, attention_weights = self.scaled_dot_product_attention(q, k, v)
+
+    # 5. 恢复维度：transpose 后必须调用 .contiguous() 确保内存连续，否则后续的 view 会报错
+    scaled_attention = scaled_attention.transpose(1, 2).contiguous()
+
+    # 6. 拼接多头并过最后的线性层 (Dense)
+    concat_attention = scaled_attention.view(batch_size, -1, self.d_model)
+    output = self.dense(concat_attention)
+
+    # 7. 正则化：Dropout + 残差连接 + LayerNorm
+    output = self.dropout(output)
+    output = self.layer_norm(output + residual)  # 残差相加并归一化
+
+    return output, attention_weights
+
+```
+
+#### 关键细节说明：
+
+1. **`.contiguous()`**：在 PyTorch 中，`transpose` 操作改变了张量在内存中的存储顺序（非连续存储）。若要紧接着执行 `.view()` 改变形状，必须先调用 `.contiguous()` 重新开辟连续内存，否则会抛出运行时错误。
+2. **残差连接与 LayerNorm (`output + residual` 结合 `LayerNorm`)**：
+* 残差连接（ResNet 思想）允许梯度直接反向传播，缓解深层网络的梯度消失问题。
+* **Post-LN 结构**：这里是先对输出做线性变换和 Dropout，然后与原输入 `residual` 相加，最后进行 `LayerNorm`（即 `LayerNorm(output + residual)`）。
+
+
+
+---
+
+### 五、 测试与输出验证
+
+```python
+# 设置模型参数
+d_model = 512
+num_heads = 8
+dropout_rate = 0.1
+batch_size = 2
+seq_len = 10
+
+# 输入张量 (Batch Size=2, 序列长度=10, 词向量维度=512)
+input_tensor = torch.rand(batch_size, seq_len, d_model)
+
+# 初始化并测试模型
+multi_head_attention = MultiHeadAttentionWithRegularization(d_model, num_heads, dropout_rate)
+output, attention_weights = multi_head_attention(input_tensor, input_tensor, input_tensor)
+
+print("Output Shape:", output.shape)
+print("Attention Weights Shape:", attention_weights.shape)
+
+```
+
+运行这段测试脚本后，输出的形状为：
+
+* **`Output Shape: torch.Size([2, 10, 512])`**：输出的维度与输入完全一致（`batch_size=2`, `seq_len=10`, `d_model=512`），这意味着该模块可以像搭积木一样安全地堆叠多层（Transformer Encoder/Decoder 结构）。
+* **`Attention Weights Shape: torch.Size([2, 8, 10, 10])`**：表示 2 个样本、8 个注意力头，每个头对应一个 $10 \times 10$ 的注意力权重矩阵（代表当前序列中每个词与其他词之间的关联权重）。
+* ---
+* ### 六、 运行结果
+* <img width="566" height="70" alt="bdb2845e-59f1-4cfd-ab4c-c0802bdaaea0" src="https://github.com/user-attachments/assets/18553a8e-c859-4214-8066-43b0706cd551" />
