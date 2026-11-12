@@ -17,6 +17,7 @@
 ### 第八章：深度剖析注意力机制
 - [In-Depth Analysis of the Attention Mechanism](./In-Depth%20Analysis%20of%20the%20Attention%20Mechanism)
 ### 第九章：文本聚类与BERT主题建模
+- [Text clustering and BERT topic modeling](./Text%20clustering%20and%20BERT%20topic%20modeling)
 ### 第十章：基于语义匹配的问答系统
 - [A Question Answering System Based on Semantic Matching](./A%20Question%20Answering%20System%20Based%20on%20Semantic%20Matching)
 ### 第十一章：常用模型微调技术
