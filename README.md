@@ -10,6 +10,7 @@
 - [Dependency Syntax and Semantic Parsing](./Dependency%20Syntax%20and%20Semantic%20Parsing)
 ### 第五章：序列标注与命名实体识别
 ### 第六章：文本生成任务的Transformer实现
+- [Implementation of Transformer for Text Task Generation‌](./Implementation%20of%20Transformer%20for%20Text%20Task%20Generation‌)
 ### 第七章：多语言模型与跨语言任务
 ### 第八章：深度剖析注意力机制
 ### 第九章：文本聚类与BERT主题建模
