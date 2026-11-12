@@ -4,6 +4,7 @@
 ### 第一章：Transformer与自然语言处理概述
 - [Overview of Transformers and NLP](./Overview%20of%20Transformers%20and%20NLP)
 ### 第二章：文本预处理与数据增强
+- [Text Preprocessing and Data Augmentation](./Text%20Preprocessing%20and%20Data%20Augmentation)
 ### 第三章：基于Transformer的文本分类
 ### 第四章：依存句法与语义解析
 ### 第五章：序列标注与命名实体识别
