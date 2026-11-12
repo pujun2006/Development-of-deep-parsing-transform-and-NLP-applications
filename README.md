@@ -13,6 +13,7 @@
 - [Implementation of Transformer for Text Task Generation‌](./Implementation%20of%20Transformer%20for%20Text%20Task%20Generation‌)
 ### 第七章：多语言模型与跨语言任务
 ### 第八章：深度剖析注意力机制
+- [In-Depth Analysis of the Attention Mechanism](./In-Depth%20Analysis%20of%20the%20Attention%20Mechanism)
 ### 第九章：文本聚类与BERT主题建模
 ### 第十章：基于语义匹配的问答系统
 - [A Question Answering System Based on Semantic Matching](./A%20Question%20Answering%20System%20Based%20on%20Semantic%20Matching)
