@@ -9,6 +9,7 @@
 ### 第四章：依存句法与语义解析
 - [Dependency Syntax and Semantic Parsing](./Dependency%20Syntax%20and%20Semantic%20Parsing)
 ### 第五章：序列标注与命名实体识别
+- [Sequence Labeling and Named Entity Recognition‌](./Sequence%20Labeling%20and%20Named%20Entity%20Recognition‌)
 ### 第六章：文本生成任务的Transformer实现
 - [Implementation of Transformer for Text Task Generation‌](./Implementation%20of%20Transformer%20for%20Text%20Task%20Generation‌)
 ### 第七章：多语言模型与跨语言任务
