@@ -7,6 +7,7 @@
 - [Text Preprocessing and Data Augmentation](./Text%20Preprocessing%20and%20Data%20Augmentation)
 ### 第三章：基于Transformer的文本分类
 ### 第四章：依存句法与语义解析
+- [Dependency Syntax and Semantic Parsing](./Dependency%20Syntax%20and%20Semantic%20Parsing)
 ### 第五章：序列标注与命名实体识别
 ### 第六章：文本生成任务的Transformer实现
 ### 第七章：多语言模型与跨语言任务
