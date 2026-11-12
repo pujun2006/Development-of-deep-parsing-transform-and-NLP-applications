@@ -12,6 +12,7 @@
 ### 第六章：文本生成任务的Transformer实现
 - [Implementation of Transformer for Text Task Generation‌](./Implementation%20of%20Transformer%20for%20Text%20Task%20Generation‌)
 ### 第七章：多语言模型与跨语言任务
+- [Multilingual Models and Cross-Language Tasks‌](./Multilingual%20Models%20and%20Cross-Language%20Tasks‌)
 ### 第八章：深度剖析注意力机制
 - [In-Depth Analysis of the Attention Mechanism](./In-Depth%20Analysis%20of%20the%20Attention%20Mechanism)
 ### 第九章：文本聚类与BERT主题建模
