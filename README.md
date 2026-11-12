@@ -14,4 +14,5 @@
 ### 第九章：文本聚类与BERT主题建模
 ### 第十章：基于语义匹配的问答系统
 ### 第十一章：常用模型微调技术
+- [Common model fine-tuning techniques](./Common%20model%20fine-tuning%20techniques)
 ### 第十二章：企业级系统开发（部分）
